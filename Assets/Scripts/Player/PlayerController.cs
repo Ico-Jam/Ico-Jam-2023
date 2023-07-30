@@ -12,7 +12,7 @@ public class PlayerController : MonoBehaviour
     private Rigidbody2D _rb;
 
     [SerializeField]
-    private float _movSpeed, _jumpForce;
+    private float _movSpeed, _jumpForce, _groundCheckDistance;
 
     private float _direction;
 
@@ -21,6 +21,9 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField]
     private Vector2 _groundedPosition;
+
+    [SerializeField]
+    private AudioSource _jumpSound, _collideSound, _deathSound, _mergeSound;
 
     private void Awake()
     {
@@ -33,6 +36,7 @@ public class PlayerController : MonoBehaviour
         if (!IsGrounded()) return;
         _rb.velocity = new Vector2(_rb.velocity.x, 0);
         _rb.AddForce(Vector2.up * _jumpForce, ForceMode2D.Impulse);
+        _jumpSound.Play();
     }
 
     private void Update()
@@ -52,27 +56,41 @@ public class PlayerController : MonoBehaviour
 
     private bool IsGrounded()
     {
-        RaycastHit2D hitLeft = Physics2D.Raycast((Vector3)_groundedPosition + transform.position + Vector3.right * -0.15f, Vector2.down, 0.3f, _floorLayer);
-        RaycastHit2D hitRight = Physics2D.Raycast((Vector3)_groundedPosition + transform.position + Vector3.right * 0.15f, Vector2.down, 0.3f, _floorLayer);
+        RaycastHit2D hitLeft = Physics2D.Raycast((Vector3)_groundedPosition + transform.position + Vector3.right * -_groundCheckDistance, Vector2.down, 0.3f, _floorLayer);
+        RaycastHit2D hitRight = Physics2D.Raycast((Vector3)_groundedPosition + transform.position + Vector3.right * _groundCheckDistance, Vector2.down, 0.3f, _floorLayer);
+        RaycastHit2D hitCenter = Physics2D.Raycast((Vector3)_groundedPosition + transform.position, Vector2.down, 0.3f, _floorLayer);
 
-        return hitLeft.collider != null || hitRight.collider != null;
+        return hitLeft.collider != null || hitRight.collider != null || hitCenter.collider != null;
     }
 
     private void OnDrawGizmos()
     {
-        Debug.DrawLine((Vector3)_groundedPosition + transform.position + Vector3.right * 0.15f, (Vector3)_groundedPosition + transform.position + Vector3.right * 0.15f + Vector3.down * 0.3f, Color.blue);
-        Debug.DrawLine((Vector3)_groundedPosition + transform.position + Vector3.right * -0.15f, (Vector3)_groundedPosition + transform.position + Vector3.right * -0.15f + Vector3.down * 0.3f, Color.blue);
+        Debug.DrawLine((Vector3)_groundedPosition + transform.position + Vector3.right * _groundCheckDistance, (Vector3)_groundedPosition + transform.position + Vector3.right * _groundCheckDistance + Vector3.down * 0.3f, Color.blue);
+        Debug.DrawLine((Vector3)_groundedPosition + transform.position + Vector3.right * -_groundCheckDistance, (Vector3)_groundedPosition + transform.position + Vector3.right * -_groundCheckDistance + Vector3.down * 0.3f, Color.blue);
+        Debug.DrawLine((Vector3)_groundedPosition + transform.position, (Vector3)_groundedPosition + transform.position + Vector3.down * 0.3f, Color.blue);
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Player") && collision.transform.localScale.x > transform.localScale.x)
+        if (collision.gameObject.CompareTag("Player") && collision.transform.localScale.x < transform.localScale.x)
         {
-            Destroy(gameObject);
+            _mergeSound.Play();
+            Destroy(collision.gameObject);
         }
         if (collision.gameObject.CompareTag("Spike"))
         {
-            GameManager.Instance.ReloadLevel();
+            _inputActions.Player.Disable();
+            _deathSound.Play();
+            _rb.gravityScale = 0;
+            _rb.velocity = Vector2.zero;
+            GameManager.Instance.Invoke(nameof(GameManager.Instance.ReloadLevel), 0.5f);
+        }
+        if ((_floorLayer & 1 << collision.gameObject.layer) == 1 << collision.gameObject.layer)
+        {
+            if(Time.timeSinceLevelLoad > 0.25f)
+            {
+                _collideSound.Play();
+            }
         }
     }
 

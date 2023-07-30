@@ -7,6 +7,9 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
 
+    [SerializeField]
+    private GameObject winCanvas;
+
     private void Awake()
     {
         if (Instance == null)
@@ -25,9 +28,9 @@ public class GameManager : MonoBehaviour
         if (SceneManager.sceneCountInBuildSettings > SceneManager.GetActiveScene().buildIndex + 1)
         {
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
-        }else
+        }else if(winCanvas != null)
         {
-            SceneManager.LoadScene(0);
+            winCanvas.SetActive(true);
         }
 
     }

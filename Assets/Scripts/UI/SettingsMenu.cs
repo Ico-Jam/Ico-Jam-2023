@@ -33,6 +33,7 @@ public class SettingsMenu : MonoBehaviour
         masterSlider.value = masterVolume;
         musicSlider.value = musicVolume;
         sfxSlider.value = sfxVolume;
+        if (Time.timeSinceLevelLoad <= 0) gameObject.SetActive(false);
     }
 
     private void CloseSettings(InputAction.CallbackContext obj)
