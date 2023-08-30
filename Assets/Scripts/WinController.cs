@@ -8,32 +8,16 @@ using UnityEngine.SceneManagement;
 public class WinController : MonoBehaviour
 {
     private PlayerInputActions _inputActions;
-    private float timer;
-    private bool delay;
 
     private void Awake()
     {
         _inputActions = new PlayerInputActions();
-        _inputActions.UI.Accept.performed += LoadMainMenu;
+        FindObjectOfType<MusicManager>().GetComponent<AudioSource>().Stop();
     }
 
-    private void LoadMainMenu(InputAction.CallbackContext context)
+    public void LoadMainMenu()
     {
-        if (delay)
-        {
-            SceneManager.LoadScene(0);
-        }
-    }
-
-    private void Update()
-    {
-        if (timer > 2) {
-            delay = true;
-        }
-        else
-        {
-            timer += Time.deltaTime;
-        }
+        SceneManager.LoadScene(0);
     }
 
     private void OnEnable()

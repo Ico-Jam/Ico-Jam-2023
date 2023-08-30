@@ -1,15 +1,24 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class MusicManager : MonoBehaviour
 {
 
-    private void OnLevelWasLoaded(int level)
+    void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         DontDestroyOnLoad(this);
-        if (level == 0) {
+        if (scene.buildIndex == 0)
+        {
             Destroy(gameObject);
         }
     }
